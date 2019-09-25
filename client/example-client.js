@@ -10,7 +10,7 @@
  */
 
 // URL to the server with the port we are using for WebSockets.
-const webSocketUrl = 'ws://54.191.242.239:8080';
+const webSocketUrl = 'ws://127.0.0.1:8080';
 // The WebSocket object used to manage a connection.
 let webSocketConnection = null;
 // The RTCPeerConnection through which we engage in the SDP handshake.
@@ -28,8 +28,9 @@ let startTime;
 
 // Callback for when we receive a message on the data channel.
 function onDataChannelMessage(event) {
-  const key = event.data;
-  pingLatency[key] = performance.now() - pingTimes[key];
+  // const key = event.data;
+  // pingLatency[key] = performance.now() - pingTimes[key];
+  console.log("Response: " + event.data);
 }
 
 // Callback for when the data channel was successfully opened.
@@ -52,7 +53,7 @@ function onOfferCreated(description) {
 
 // Callback for when the WebSocket is successfully opened.
 function onWebSocketOpen() {
-  const config = { iceServers: [{ url: 'stun:stun.l.google.com:19302' }] };
+  const config = { iceServers: [{ urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19305" ] }] };
   rtcPeerConnection = new RTCPeerConnection(config);
   const dataChannelConfig = { ordered: false, maxRetransmits: 0 };
   dataChannel = rtcPeerConnection.createDataChannel('dc', dataChannelConfig);
@@ -125,4 +126,11 @@ function ping() {
   startTime = performance.now();
   // pingInterval = setInterval(sendDataChannelPing, 1000.0 / PINGS_PER_SECOND);
   pingInterval = setInterval(sendWebSocketPing, 1000.0 / PINGS_PER_SECOND);
+}
+
+
+function sendMessage() {
+  let msg = document.getElementById('message').value;
+  console.log("Message: " + msg);
+  dataChannel.send(msg);
 }
