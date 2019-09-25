@@ -10,6 +10,7 @@ class GeoserveConan( ConanFile ):
                         # ( "orovmsg/3.6.1@openrov/stable" ),
                         # ( "jsonformoderncpp/3.7.0@vthiery/stable" ),
                         # ( "libcurl/7.64.1@bincrafters/stable" ),
+                        ( "jsonformoderncpp/3.7.0@vthiery/stable" ),
                         ( "boost/1.68.0@conan/stable" )
     )
     options         = { "arm": [True, False] }

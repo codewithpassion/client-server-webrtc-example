@@ -92,7 +92,7 @@ class CreateSessionDescriptionObserver : public webrtc::CreateSessionDescription
     void AddRef() const { return; }
 
     // Unimplemented virtual function.
-    rtc::RefCountReleaseStatus Release() const { rtc::RefCountReleaseStatus::kDroppedLastRef; }
+    rtc::RefCountReleaseStatus Release() const { return rtc::RefCountReleaseStatus::kDroppedLastRef; }
 
   private:
     std::function<void(webrtc::SessionDescriptionInterface*)> on_success;
@@ -114,7 +114,7 @@ class SetSessionDescriptionObserver : public webrtc::SetSessionDescriptionObserv
     void AddRef() const { return; }
 
     // Unimplemented virtual function.
-    rtc::RefCountReleaseStatus Release() const { rtc::RefCountReleaseStatus::kDroppedLastRef; }
+    rtc::RefCountReleaseStatus Release() const { return rtc::RefCountReleaseStatus::kDroppedLastRef; }
 };
 
 #endif  // WEBRTC_EXAMPLE_SERVER_OBSERVERS_H

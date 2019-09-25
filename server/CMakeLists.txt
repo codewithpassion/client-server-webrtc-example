@@ -8,7 +8,6 @@ conan_basic_setup(TARGETS)
 find_package(Threads REQUIRED)
 # find_package(LibWebRTC REQUIRED)
 
-
 include_directories(
     ${LIBWEBRTC_INCLUDE_PATH}
     "${LIBWEBRTC_INCLUDE_PATH}/third_party/abseil-cpp"
@@ -35,6 +34,7 @@ set_target_properties(server_exe PROPERTIES OUTPUT_NAME example-server
 target_link_libraries(server_exe
     ${LIBWEBRTC_BINARY_PATH}/libwebrtc${CMAKE_STATIC_LIBRARY_SUFFIX}
     ${CMAKE_THREAD_LIBS_INIT}
-    CONAN_PKG::boost 
+    CONAN_PKG::boost
+	CONAN_PKG::jsonformoderncpp
     pthread)
 

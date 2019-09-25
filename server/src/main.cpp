@@ -8,9 +8,6 @@
 
 #include "observers.h"
 
-#include <rapidjson/document.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
 #include "modules/audio_device/include/fake_audio_device.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
@@ -27,6 +24,8 @@
 
 #include <iostream>
 #include <thread>
+
+#include <nlohmann/json.hpp>
 
 // WebSocket++ types are gnarly.
 using websocketpp::lib::placeholders::_1;
@@ -84,25 +83,16 @@ void OnDataChannelCreated(rtc::scoped_refptr<webrtc::DataChannelInterface> chann
 void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
   std::string candidate_str;
   candidate->ToString(&candidate_str);
-  rapidjson::Document message_object;
-  message_object.SetObject();
-  message_object.AddMember("type", "candidate", message_object.GetAllocator());
-  rapidjson::Value candidate_value;
-  candidate_value.SetString(rapidjson::StringRef(candidate_str.c_str()));
-  rapidjson::Value sdp_mid_value;
-  sdp_mid_value.SetString(rapidjson::StringRef(candidate->sdp_mid().c_str()));
-  rapidjson::Value message_payload;
-  message_payload.SetObject();
-  message_payload.AddMember("candidate", candidate_value, message_object.GetAllocator());
-  message_payload.AddMember("sdpMid", sdp_mid_value, message_object.GetAllocator());
-  message_payload.AddMember("sdpMLineIndex", candidate->sdp_mline_index(),
-      message_object.GetAllocator());
-  message_object.AddMember("payload", message_payload, message_object.GetAllocator());
-  rapidjson::StringBuffer strbuf;
-  rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
-  message_object.Accept(writer);
-  std::string payload = strbuf.GetString();
-  ws_server.send(websocket_connection_handler, payload, websocketpp::frame::opcode::value::text);
+
+  nlohmann::json iceCandidateMsg = {
+          { "type", "candidate" },
+          { "payload", {
+               { "candidate",       candidate_str.c_str() },
+               { "sdpMid",          candidate->sdp_mid().c_str() },
+               { "sdpMLineIndex",   candidate->sdp_mline_index() }
+          }}
+  };
+  ws_server.send(websocket_connection_handler, iceCandidateMsg.dump(), websocketpp::frame::opcode::value::text);
 }
 
 // Callback for when the server receives a message on the data channel.
@@ -116,42 +106,40 @@ void OnDataChannelMessage(const webrtc::DataBuffer& buffer) {
 
 // Callback for when the answer is created. This sends the answer back to the client.
 void OnAnswerCreated(webrtc::SessionDescriptionInterface* desc) {
-  peer_connection->SetLocalDescription(&set_session_description_observer, desc);
-  // Apologies for the poor code ergonomics here; I think rapidjson is just verbose.
-  std::string offer_string;
-  desc->ToString(&offer_string);
-  rapidjson::Document message_object;
-  message_object.SetObject();
-  message_object.AddMember("type", "answer", message_object.GetAllocator());
-  rapidjson::Value sdp_value;
-  sdp_value.SetString(rapidjson::StringRef(offer_string.c_str()));
-  rapidjson::Value message_payload;
-  message_payload.SetObject();
-  message_payload.AddMember("type", "answer", message_object.GetAllocator());
-  message_payload.AddMember("sdp", sdp_value, message_object.GetAllocator());
-  message_object.AddMember("payload", message_payload, message_object.GetAllocator());
-  rapidjson::StringBuffer strbuf;
-  rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
-  message_object.Accept(writer);
-  std::string payload = strbuf.GetString();
-  ws_server.send(websocket_connection_handler, payload, websocketpp::frame::opcode::value::text);
+    peer_connection->SetLocalDescription(&set_session_description_observer, desc);
+    // Apologies for the poor code ergonomics here; I think rapidjson is just verbose.
+    std::string offer_string;
+    desc->ToString(&offer_string);
+
+    nlohmann::json answer = {
+            { "type", "answer" },
+            { "payload", {
+              { "type", "answer" },
+              { "sdp" , offer_string.c_str() }
+            }}
+    };
+
+    ws_server.send(websocket_connection_handler, answer.dump(), websocketpp::frame::opcode::value::text);
 }
 
 // Callback for when the WebSocket server receives a message from the client.
 void OnWebSocketMessage(WebSocketServer* /* s */, websocketpp::connection_hdl hdl, message_ptr msg) {
   websocket_connection_handler = hdl;
-  rapidjson::Document message_object;
-  message_object.Parse(msg->get_payload().c_str());
+
+  nlohmann::json message = nlohmann::json::parse(msg->get_payload());
+
   // Probably should do some error checking on the JSON object.
-  std::string type = message_object["type"].GetString();
+  std::string type = message["type"];
+
 
   if (type == "ping") {
     std::string id = msg->get_payload().c_str();
     ws_server.send(websocket_connection_handler, id, websocketpp::frame::opcode::value::text);
 
-  } else if (type == "offer") {
+  }
+  else if (type == "offer") {
 
-    std::string sdp = message_object["payload"]["sdp"].GetString();
+    std::string sdp = message["payload"]["sdp"];
 
     std::cerr << "offer sdp: " << sdp << std::endl;
 
@@ -189,10 +177,11 @@ void OnWebSocketMessage(WebSocketServer* /* s */, websocketpp::connection_hdl hd
     peer_connection->CreateAnswer(&create_session_description_observer, options);
 
   } else if (type == "candidate") {
-    std::string candidate = message_object["payload"]["candidate"].GetString();
-    int sdp_mline_index = message_object["payload"]["sdpMLineIndex"].GetInt();
-    std::string sdp_mid = message_object["payload"]["sdpMid"].GetString();
+    std::string candidate = message["payload"]["candidate"];
+    int sdp_mline_index = message["payload"]["sdpMLineIndex"].get<int>();
+    std::string sdp_mid = message["payload"]["sdpMid"];
     webrtc::SdpParseError error;
+
     auto candidate_object = webrtc::CreateIceCandidate(sdp_mid, sdp_mline_index, candidate, &error);
     peer_connection->AddIceCandidate(candidate_object);
   } else {
