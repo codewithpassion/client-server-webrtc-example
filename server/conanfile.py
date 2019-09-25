@@ -1,25 +1,19 @@
 from conans import ConanFile, CMake, tools
 
-class GeoserveConan( ConanFile ):
-    name            = "trident-webrtc-pusher"
-    license         = "Proprietary"
-    url             = "https://gitlab.com/openrov/trident/"
-    description     = "Pushes trident video messages to webrtc server"
+class WebRTC( ConanFile ):
+    name            = "client-server-webrtc-example"
+    license         = "MIT"
+    url             = "https://github.com/codewithpassion/client-server-webrtc-example"
+    description     = "Very basic webrtc DataChannel example"
     requires        = (
-                        # ( "orovcore/1.1.0@openrov/stable" ),
-                        # ( "orovmsg/3.6.1@openrov/stable" ),
-                        # ( "jsonformoderncpp/3.7.0@vthiery/stable" ),
-                        # ( "libcurl/7.64.1@bincrafters/stable" ),
                         ( "jsonformoderncpp/3.7.0@vthiery/stable" ),
+                        ( "websocketpp/0.8.1@bincrafters/stable" ),
                         ( "boost/1.68.0@conan/stable" )
     )
     options         = { "arm": [True, False] }
     default_options = { "arm": False }
     generators      = "cmake"
 
-    # def configure( self ):
-    #     self.options["OpenSSL"].shared = False
-    #     self.options["libcurl"].shared = True
 
     def system_requirements(self):
         package_tool = tools.SystemPackageTool()
@@ -27,11 +21,6 @@ class GeoserveConan( ConanFile ):
     def build( self ):
         cmake = CMake(self)
         # Add warnings
-        # cmake.definitions["CMAKE_CXX_FLAGS"]="-Wall -Wextra -Wno-class-memaccess -Wno-expansion-to-defined -Wno-unused-parameter"
-        # cmake.definitions["CMAKE_INSTALL_PREFIX"] = self.package_folder + "/opt/openrov/"
-
-        # cmake.definitions["BUILD_CPR_TESTS"] = "OFF"
-        # cmake.definitions["USE_SYSTEM_CURL"] = "ON"
 
         cmake.definitions["LIBWEBRTC_INCLUDE_PATH"] = "~/workspace/webrtc-m74/src"
         cmake.definitions["LIBWEBRTC_INCLUDE_PATH:PATH"] = "~/workspace/webrtc-m74/src"
@@ -55,5 +44,3 @@ class GeoserveConan( ConanFile ):
     def package( self ):
         cmake = CMake(self)
         cmake.install()
-
-        self.copy ("systemd/*", "lib/systemd/system", keep_path=False)

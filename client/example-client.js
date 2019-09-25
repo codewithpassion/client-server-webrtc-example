@@ -53,7 +53,9 @@ function onOfferCreated(description) {
 
 // Callback for when the WebSocket is successfully opened.
 function onWebSocketOpen() {
+
   const config = { iceServers: [{ urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19305" ] }] };
+  
   rtcPeerConnection = new RTCPeerConnection(config);
   const dataChannelConfig = { ordered: false, maxRetransmits: 0 };
   dataChannel = rtcPeerConnection.createDataChannel('dc', dataChannelConfig);

@@ -98,11 +98,12 @@ void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) {
 // Callback for when the server receives a message on the data channel.
 void OnDataChannelMessage(const webrtc::DataBuffer& buffer) {
    std::string data(buffer.data.data<char>(), buffer.data.size());
-   std::cout << data << std::endl;
+   std::cout << "Message: " << data << std::endl;
    std::string str = "pong: " + data;
    webrtc::DataBuffer resp(rtc::CopyOnWriteBuffer(str.c_str(), str.length()), false /* binary */);
     data_channel->Send(resp);
 }
+
 
 // Callback for when the answer is created. This sends the answer back to the client.
 void OnAnswerCreated(webrtc::SessionDescriptionInterface* desc) {
@@ -171,6 +172,7 @@ void OnWebSocketMessage(WebSocketServer* /* s */, websocketpp::connection_hdl hd
     webrtc::SdpParseError error;
     webrtc::SessionDescriptionInterface* session_description(
         webrtc::CreateSessionDescription("offer", sdp, &error));
+
     peer_connection->SetRemoteDescription(&set_session_description_observer, session_description);
 
     webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
