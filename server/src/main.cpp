@@ -202,14 +202,10 @@ void SignalThreadEntry() {
 
   try {
 
-//      signalingThread->Start();
-//      workerThread->Start();
-
       if (!signalingThread->Start() || !workerThread->Start())
       {
           throw std::runtime_error("thread start errored");
       }
-
 
       peer_connection_factory = webrtc::CreatePeerConnectionFactory(
               workerThread.get(),
@@ -227,11 +223,6 @@ void SignalThreadEntry() {
   catch (std::exception& e) {
     std::cerr << ">>> Error: " << e.what() << std::endl;
   }
-
-  // rtc::Thread* signaling_thread = rtc::Thread::Current();
-  // signaling_thread->set_socketserver(&socket_server);
-  // signaling_thread->Run();
-  // signaling_thread->set_socketserver(nullptr);
 }
 
 // Main entry point of the code.

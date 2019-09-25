@@ -105,8 +105,6 @@ void on_message(client* c, websocketpp::connection_hdl hdl, message_ptr msg) {
               << " and message: " << msg->get_payload()
               << std::endl;
 
-//    std::string message = msg->get_payload();
-
     nlohmann::json message = nlohmann::json::parse(msg->get_payload());
 
     if (message["type"] == "answer") {
@@ -120,7 +118,6 @@ void on_message(client* c, websocketpp::connection_hdl hdl, message_ptr msg) {
         peer_connection->SetRemoteDescription(&set_session_description_observer, session_description);
     }
     else if (message["type"] == "candidate") {
-//        webrtc::SdpParseError error;
         auto payload = message["payload"];
 
         webrtc::SdpParseError error;
@@ -128,13 +125,6 @@ void on_message(client* c, websocketpp::connection_hdl hdl, message_ptr msg) {
         peer_connection->AddIceCandidate(candidate_object);
 
     }
-//
-//    websocketpp::lib::error_code ec;
-//
-//    c->send(hdl, msg->get_payload(), msg->get_opcode(), ec);
-//    if (ec) {
-//        std::cout << "Echo failed because: " << ec.message() << std::endl;
-//    }
 }
 
 void on_open(websocketpp::connection_hdl hndl) {
@@ -165,12 +155,6 @@ void on_open(websocketpp::connection_hdl hndl) {
     data_channel_config.maxRetransmits = 0;
     data_channel = peer_connection->CreateDataChannel("dc", &data_channel_config);
     data_channel->RegisterObserver(&data_channel_observer);
-    // TODO observe
-
-//    webrtc::SdpParseError error;
-//    webrtc::SessionDescriptionInterface* session_description(
-//            webrtc::CreateSessionDescription("offer", sdp, &error));
-//    peer_connection->SetRemoteDescription(&set_session_description_observer, session_description);
 
     webrtc::PeerConnectionInterface::RTCOfferAnswerOptions options;
     options.offer_to_receive_audio = false;
